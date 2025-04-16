@@ -116,6 +116,21 @@
         gap: 10px;
       }
     }
+
+    input[type="text"] {
+  box-sizing: border-box; /* asegura que el padding no sume al ancho total */
+}
+
+label, input {
+  max-width: 100%; /* previene que se desborden */
+}
+
+@media (max-width: 600px) {
+  input[type="text"] {
+    font-size: 15px;
+  }
+}
+
   </style>
 </head>
 <body>
