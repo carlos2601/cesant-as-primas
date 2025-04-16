@@ -1,0 +1,212 @@
+<!DOCTYPE html> 
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Prima y Cesantías</title>
+  <style>
+    body {
+      font-family: Tahoma, sans-serif;
+      background-color: #f0f0f0;
+      padding: 20px;
+    }
+    form {
+      max-width: 700px;
+      margin: auto;
+      background: white;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      font-size: 22px;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      font-weight: bold;
+      margin-top: 12px;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background-color: #b7dbb9;
+      text-align: right;
+    }
+    .btn {
+      width: 100%;
+      padding: 12px;
+      margin-top: 25px;
+      background-color: #008000;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .result {
+      margin-top: 25px;
+      background: #2e7d32;
+      padding: 20px;
+      border-radius: 8px;
+      font-size: 18px;
+      color: white;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 15px;
+    }
+    .formula {
+      background: white;
+      padding: 15px;
+      border-radius: 6px;
+      font-size: 16px;
+      font-style: normal;
+      color: black;
+      line-height: 1.6;
+      font-family: Tahoma, sans-serif;
+      font-weight: bold;
+    }
+    .totales {
+      background: white;
+      padding: 15px;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 16px;
+      color: black;
+      font-family: Tahoma, sans-serif;
+    }
+    .periodo-selector {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin-bottom: 20px;
+      color: #2c3e50;
+      font-weight: bold;
+      font-size: 16px;
+    }
+    .periodo-selector label {
+      color: #2a7ae2;
+    }
+  </style>
+</head>
+<body>
+
+  <form>
+    <h1>Prima y Cesantías</h1>
+
+    <div class="periodo-selector">
+      <label><input type="radio" name="periodo" value="1" checked onchange="cambiarPeriodo()"> Enero a Junio</label>
+      <label><input type="radio" name="periodo" value="2" onchange="cambiarPeriodo()"> Julio a Diciembre</label>
+    </div>
+
+    <div id="meses">
+      <!-- Aquí se cargan los campos según el semestre -->
+    </div>
+
+    <label for="auxilio">Auxilio de Transporte:</label>
+    <input type="text" id="auxilio" value="162.000" oninput="formatearMiles(this)">
+
+    <label for="diasTrabajados">Días trabajados en el semestre:</label>
+    <input type="text" id="diasTrabajados" placeholder="Ej: 180" oninput="formatearMiles(this)">
+
+    <button type="button" class="btn" onclick="calcular()">Calcular</button>
+
+    <p style="text-align:center; margin-top:15px; font-size:14px; color:black;">
+      ¿Quieres saber qué vale un día de trabajo? 
+      <a href="https://carlos2601.github.io/calculadora/" target="_blank" style="color:#2a7ae2; text-decoration:none; font-weight:bold;">
+        Da click aquí.
+      </a>
+    </p>
+
+    <div class="result" id="resultado"></div>
+  </form>
+
+  <script>
+    let periodoActual = 1;
+
+    function formatearMiles(input) {
+      let valor = input.value.replace(/\D/g, '');
+      input.value = new Intl.NumberFormat('es-CO').format(valor);
+    }
+
+    function desformatear(valor) {
+      return parseInt(valor.replace(/\./g, '')) || 0;
+    }
+
+    function formato(valor) {
+      return new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(valor);
+    }
+
+    function cambiarPeriodo() {
+      const radios = document.getElementsByName("periodo");
+      for (const radio of radios) {
+        if (radio.checked) {
+          periodoActual = parseInt(radio.value);
+          break;
+        }
+      }
+
+      const meses = (periodoActual === 1)
+        ? ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio"]
+        : ["Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+      const contenedor = document.getElementById("meses");
+      contenedor.innerHTML = "";
+      for (let i = 0; i < meses.length; i++) {
+        contenedor.innerHTML += `
+          <label for="salario${i + 1}">${meses[i]}</label>
+          <input type="text" id="salario${i + 1}" placeholder="Ej: 1.300.000" oninput="formatearMiles(this)">
+        `;
+      }
+    }
+
+    function calcular() {
+      let totalSalario = 0;
+      let mesesValidos = 0;
+
+      for (let i = 1; i <= 6; i++) {
+        const salario = desformatear(document.getElementById('salario' + i).value);
+        if (salario > 0) {
+          totalSalario += salario;
+          mesesValidos++;
+        }
+      }
+
+      const aux = desformatear(document.getElementById('auxilio').value);
+      const dias = desformatear(document.getElementById('diasTrabajados').value);
+
+      const totalConAux = totalSalario + (aux * mesesValidos);
+      const promedioMensual = Math.round(totalConAux / mesesValidos);
+      const prima = Math.round((promedioMensual * dias) / 360);
+      const cesantias = Math.round((promedioMensual * dias) / 360);
+
+      document.getElementById('resultado').innerHTML = `
+        <div class="formula">
+          <strong>Promedio mensual</strong><br>
+          (${formato(totalSalario)} + ${formato(aux)} × ${mesesValidos}) ÷ ${mesesValidos} = <strong>${formato(promedioMensual)}</strong>
+        </div>
+        <div class="formula">
+          <strong>Prima</strong><br>
+          (${formato(promedioMensual)} × ${dias}) ÷ 360 = <strong>${formato(prima)}</strong><br>
+          <strong>Cesantías</strong><br>
+          (${formato(promedioMensual)} × ${dias}) ÷ 360 = <strong>${formato(cesantias)}</strong>
+        </div>
+        <div class="totales">
+          Prima: $${formato(prima)}<br>
+          Cesantías: $${formato(cesantias)}
+        </div>
+      `;
+    }
+
+    // Inicializa el periodo por defecto
+    cambiarPeriodo();
+  </script>
+
+</body>
+</html>
